@@ -90,6 +90,8 @@ class Food {
     let neighboursTwo = [];
     let neighboursThree = [];
     let neighboursFour = [];
+    let neighboursFive = [];
+    let neighboursSix = [];
     for (let i = 0; i < neighbours.length; i++) {
       let neigh = neighbours[i].checkNeighbours();
       for (let j = 0; j < neigh.length; j++) {
@@ -108,30 +110,53 @@ class Food {
         neighboursFour.push(neigh[j]);
       }
     }
+    for (let i = 0; i < neighboursFour.length; i++) {
+      let neigh = neighboursFour[i].checkNeighbours();
+      for (let j = 0; j < neigh.length; j++) {
+        neighboursFive.push(neigh[j]);
+      }
+    }
+    for (let i = 0; i < neighboursFive.length; i++) {
+      let neigh = neighboursFive[i].checkNeighbours();
+      for (let j = 0; j < neigh.length; j++) {
+        neighboursSix.push(neigh[j]);
+      }
+    }
+
     this.neighbours = [
       neighbours,
       neighboursTwo,
       neighboursThree,
       neighboursFour,
+      neighboursFive,
+      neighboursSix,
     ];
 
     console.log(this.neighbours);
   }
   colorFoodNeighbours() {
     for (let i = 0; i < this.neighbours[0].length; i++) {
-      this.neighbours[0][i].hightlight(this.cols, this.rows, "#982536c2");
+      this.neighbours[0][i].hightlight(this.cols, this.rows, "#982536e1");
     }
     for (let i = 0; i < this.neighbours[1].length; i++) {
       if (this.neighbours[1][i] !== this.cell)
-        this.neighbours[1][i].hightlight(this.cols, this.rows, "#98253681");
+        this.neighbours[1][i].hightlight(this.cols, this.rows, "#982536c0");
     }
     for (let i = 0; i < this.neighbours[2].length; i++) {
       if (this.neighbours[2][i] !== this.cell)
-        this.neighbours[2][i].hightlight(this.cols, this.rows, "#98253652");
+        this.neighbours[2][i].hightlight(this.cols, this.rows, "#9825368c");
     }
     for (let i = 0; i < this.neighbours[3].length; i++) {
       if (this.neighbours[3][i] !== this.cell)
-        this.neighbours[3][i].hightlight(this.cols, this.rows, "#9825363f");
+        this.neighbours[3][i].hightlight(this.cols, this.rows, "#98253663");
+    }
+    for (let i = 0; i < this.neighbours[4].length; i++) {
+      if (this.neighbours[4][i] !== this.cell)
+        this.neighbours[4][i].hightlight(this.cols, this.rows, "#98253663");
+    }
+    for (let i = 0; i < this.neighbours[5].length; i++) {
+      if (this.neighbours[5][i] !== this.cell)
+        this.neighbours[5][i].hightlight(this.cols, this.rows, "#98253663");
     }
   }
 }
