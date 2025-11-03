@@ -2,6 +2,7 @@ const maze = document.querySelector(".maze");
 const ctx = maze.getContext("2d");
 
 let current;
+let foodCell;
 
 class Maze {
   constructor(rows, cols, size) {
@@ -13,7 +14,7 @@ class Maze {
   }
 
   setup() {
-    let food = new Food(this.rows, this.cols, this.size, this.grid);
+    foodCell = new Food(this.rows, this.cols, this.size, this.grid);
     for (let r = 0; r < this.rows; r++) {
       let row = [];
       for (let c = 0; c < this.cols; c++) {
@@ -23,7 +24,8 @@ class Maze {
       this.grid.push(row);
     }
     current = this.grid[0][0];
-    food.chooseCell();
+    foodCell.chooseCell();
+    foodCell.foodNeihbours();
   }
 
   draw() {
@@ -36,25 +38,23 @@ class Maze {
       for (let c = 0; c < this.cols; c++) {
         let grid = this.grid;
         grid[r][c].show(this.size, this.cols, this.rows);
-        if (grid[r][c].food) {
-          grid[r][c].hightlight(this.cols, this.rows, "#982537");
-        }
       }
     }
-    let next = current.checkNeighbours();
+    let neighbours = current.checkNeighbours() ? current.checkNeighbours() : [];
+    let random = Math.floor(Math.random() * neighbours.length);
+    let next = neighbours[random];
     if (current.food) return;
+    foodCell.cell.hightlight(this.cols, this.rows, "#c50404ff");
+    foodCell.colorFoodNeighbours();
+    current.hightlight(this.cols, this.rows, "purple");
     if (next) {
       next.visited = true;
       this.stack.push(current);
-
-      current.hightlight(this.cols, this.rows, "purple");
-
       current.removeWalls(current, next);
       current = next;
     } else if (this.stack.length > 0) {
       let cell = this.stack.pop();
       current = cell;
-      current.hightlight(this.cols, this.rows, "purple");
     }
     if (this.stack.length == 0) {
       return;
@@ -75,6 +75,7 @@ class Food {
     this.size = size;
     this.parentGrid = parentGrid;
     this.cell = null;
+    this.neighbours = [];
   }
   chooseCell() {
     let grid = this.parentGrid;
@@ -83,9 +84,56 @@ class Food {
     let cell = grid[randomRow][randomCol];
     cell.food = true;
     this.cell = cell;
-    console.log(cell);
   }
-  drawFood() {}
+  foodNeihbours() {
+    let neighbours = this.cell.checkNeighbours();
+    let neighboursTwo = [];
+    let neighboursThree = [];
+    let neighboursFour = [];
+    for (let i = 0; i < neighbours.length; i++) {
+      let neigh = neighbours[i].checkNeighbours();
+      for (let j = 0; j < neigh.length; j++) {
+        neighboursTwo.push(neigh[j]);
+      }
+    }
+    for (let i = 0; i < neighboursTwo.length; i++) {
+      let neigh = neighboursTwo[i].checkNeighbours();
+      for (let j = 0; j < neigh.length; j++) {
+        neighboursThree.push(neigh[j]);
+      }
+    }
+    for (let i = 0; i < neighboursThree.length; i++) {
+      let neigh = neighboursThree[i].checkNeighbours();
+      for (let j = 0; j < neigh.length; j++) {
+        neighboursFour.push(neigh[j]);
+      }
+    }
+    this.neighbours = [
+      neighbours,
+      neighboursTwo,
+      neighboursThree,
+      neighboursFour,
+    ];
+
+    console.log(this.neighbours);
+  }
+  colorFoodNeighbours() {
+    for (let i = 0; i < this.neighbours[0].length; i++) {
+      this.neighbours[0][i].hightlight(this.cols, this.rows, "#982536c2");
+    }
+    for (let i = 0; i < this.neighbours[1].length; i++) {
+      if (this.neighbours[1][i] !== this.cell)
+        this.neighbours[1][i].hightlight(this.cols, this.rows, "#98253681");
+    }
+    for (let i = 0; i < this.neighbours[2].length; i++) {
+      if (this.neighbours[2][i] !== this.cell)
+        this.neighbours[2][i].hightlight(this.cols, this.rows, "#98253652");
+    }
+    for (let i = 0; i < this.neighbours[3].length; i++) {
+      if (this.neighbours[3][i] !== this.cell)
+        this.neighbours[3][i].hightlight(this.cols, this.rows, "#9825363f");
+    }
+  }
 }
 
 class Cell {
@@ -115,12 +163,7 @@ class Cell {
     if (bottom && !bottom.visited) neighbours.push(bottom);
     if (left && !left.visited) neighbours.push(left);
 
-    if (neighbours.length !== 0) {
-      let random = Math.floor(Math.random() * neighbours.length);
-      return neighbours[random];
-    } else {
-      return undefined;
-    }
+    return neighbours;
   }
 
   drawTopWall(x, y, size, columns, rows) {
