@@ -12,6 +12,7 @@ class Maze {
     this.size = size;
     this.grid = [];
     this.stack = [];
+    this.foodStack = [];
   }
 
   setup() {
@@ -44,19 +45,30 @@ class Maze {
         grid[r][c].show(this.size, this.cols, this.rows);
       }
     }
-    let neighbours = current.checkNeighbours() ? current.checkNeighbours() : [];
+    let neighbours = current.checkNeighbours();
+    let foodNeighbours = foodCell.cell.checkNeighbours();
     let random = Math.floor(Math.random() * neighbours.length);
-    // let next = neighbours[random];
     let next = attraction.applyForce(current, foodCell.cell);
+    let chooseCell = random < neighbours.length / 2 ? neighbours[random] : next;
+    let nextFood = foodNeighbours[random];
     // stops if food is reached
     if (current.food) return;
     foodCell.cell.hightlight(this.cols, this.rows, "#c50404ff");
     current.hightlight(this.cols, this.rows, "purple");
-    if (next) {
-      next.visited = true;
+    if (nextFood) {
+      this.foodStack.push(foodCell.cell);
+      foodCell.cell.food = false;
+      foodCell.cell = nextFood;
+      foodCell.cell.food = true;
+    } else if (this.foodStack.length > 0) {
+      let cell = this.foodStack.pop();
+      foodCell = cell;
+    }
+    if (chooseCell) {
+      chooseCell.visited = true;
       this.stack.push(current);
-      current.removeWalls(current, next);
-      current = next;
+      current.removeWalls(current, chooseCell);
+      current = chooseCell;
     } else if (this.stack.length > 0) {
       let cell = this.stack.pop();
       current = cell;
@@ -64,7 +76,7 @@ class Maze {
     if (this.stack.length == 0) {
       return;
     }
-    const maxFps = 2;
+    const maxFps = 10;
     window.requestAnimationFrame(() => {
       setTimeout(() => {
         this.draw();
@@ -139,7 +151,8 @@ class Cell {
     if (bottom && !bottom.visited) neighbours.push(bottom);
     if (left && !left.visited) neighbours.push(left);
 
-    return neighbours;
+    if (neighbours.length > 0) return neighbours;
+    else return [];
   }
 
   drawTopWall(x, y, size, columns, rows) {
