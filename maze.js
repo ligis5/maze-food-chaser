@@ -3,6 +3,7 @@ const ctx = maze.getContext("2d");
 
 let current;
 let foodCell;
+let attraction;
 
 class Maze {
   constructor(rows, cols, size) {
@@ -23,9 +24,12 @@ class Maze {
       }
       this.grid.push(row);
     }
-    current = this.grid[0][0];
+    current =
+      this.grid[Math.floor(Math.random() * this.rows)][
+        Math.floor(Math.random() * this.rows)
+      ];
     foodCell.chooseCell();
-    foodCell.foodNeihbours();
+    attraction = new Attraction();
   }
 
   draw() {
@@ -42,10 +46,11 @@ class Maze {
     }
     let neighbours = current.checkNeighbours() ? current.checkNeighbours() : [];
     let random = Math.floor(Math.random() * neighbours.length);
-    let next = neighbours[random];
+    // let next = neighbours[random];
+    let next = attraction.applyForce(current, foodCell.cell);
+    // stops if food is reached
     if (current.food) return;
     foodCell.cell.hightlight(this.cols, this.rows, "#c50404ff");
-    foodCell.colorFoodNeighbours();
     current.hightlight(this.cols, this.rows, "purple");
     if (next) {
       next.visited = true;
@@ -59,7 +64,7 @@ class Maze {
     if (this.stack.length == 0) {
       return;
     }
-    const maxFps = 20;
+    const maxFps = 2;
     window.requestAnimationFrame(() => {
       setTimeout(() => {
         this.draw();
@@ -75,7 +80,6 @@ class Food {
     this.size = size;
     this.parentGrid = parentGrid;
     this.cell = null;
-    this.neighbours = [];
   }
   chooseCell() {
     let grid = this.parentGrid;
@@ -84,79 +88,26 @@ class Food {
     let cell = grid[randomRow][randomCol];
     cell.food = true;
     this.cell = cell;
+    console.log(cell);
   }
-  foodNeihbours() {
-    let neighbours = this.cell.checkNeighbours();
-    let neighboursTwo = [];
-    let neighboursThree = [];
-    let neighboursFour = [];
-    let neighboursFive = [];
-    let neighboursSix = [];
-    for (let i = 0; i < neighbours.length; i++) {
-      let neigh = neighbours[i].checkNeighbours();
-      for (let j = 0; j < neigh.length; j++) {
-        neighboursTwo.push(neigh[j]);
-      }
-    }
-    for (let i = 0; i < neighboursTwo.length; i++) {
-      let neigh = neighboursTwo[i].checkNeighbours();
-      for (let j = 0; j < neigh.length; j++) {
-        neighboursThree.push(neigh[j]);
-      }
-    }
-    for (let i = 0; i < neighboursThree.length; i++) {
-      let neigh = neighboursThree[i].checkNeighbours();
-      for (let j = 0; j < neigh.length; j++) {
-        neighboursFour.push(neigh[j]);
-      }
-    }
-    for (let i = 0; i < neighboursFour.length; i++) {
-      let neigh = neighboursFour[i].checkNeighbours();
-      for (let j = 0; j < neigh.length; j++) {
-        neighboursFive.push(neigh[j]);
-      }
-    }
-    for (let i = 0; i < neighboursFive.length; i++) {
-      let neigh = neighboursFive[i].checkNeighbours();
-      for (let j = 0; j < neigh.length; j++) {
-        neighboursSix.push(neigh[j]);
-      }
-    }
+}
 
-    this.neighbours = [
-      neighbours,
-      neighboursTwo,
-      neighboursThree,
-      neighboursFour,
-      neighboursFive,
-      neighboursSix,
-    ];
-
-    console.log(this.neighbours);
+class Attraction {
+  calculateDirection(attractor, chaser) {
+    let rowDiff = attractor.rowNum - chaser.rowNum;
+    let colDiff = attractor.colNum - chaser.colNum;
+    let magnitude = Math.sqrt(rowDiff * rowDiff + colDiff * colDiff);
+    return magnitude;
   }
-  colorFoodNeighbours() {
-    for (let i = 0; i < this.neighbours[0].length; i++) {
-      this.neighbours[0][i].hightlight(this.cols, this.rows, "#982536e1");
-    }
-    for (let i = 0; i < this.neighbours[1].length; i++) {
-      if (this.neighbours[1][i] !== this.cell)
-        this.neighbours[1][i].hightlight(this.cols, this.rows, "#982536c0");
-    }
-    for (let i = 0; i < this.neighbours[2].length; i++) {
-      if (this.neighbours[2][i] !== this.cell)
-        this.neighbours[2][i].hightlight(this.cols, this.rows, "#9825368c");
-    }
-    for (let i = 0; i < this.neighbours[3].length; i++) {
-      if (this.neighbours[3][i] !== this.cell)
-        this.neighbours[3][i].hightlight(this.cols, this.rows, "#98253663");
-    }
-    for (let i = 0; i < this.neighbours[4].length; i++) {
-      if (this.neighbours[4][i] !== this.cell)
-        this.neighbours[4][i].hightlight(this.cols, this.rows, "#98253663");
-    }
-    for (let i = 0; i < this.neighbours[5].length; i++) {
-      if (this.neighbours[5][i] !== this.cell)
-        this.neighbours[5][i].hightlight(this.cols, this.rows, "#98253663");
+  applyForce(chaser, attractor) {
+    let magnitude = this.calculateDirection(chaser, attractor);
+    // pick neihbour in the direction of the attractor
+    let neighbours = chaser.checkNeighbours();
+    for (let neighbour of neighbours) {
+      let neighbourMagnitude = this.calculateDirection(neighbour, attractor);
+      if (neighbourMagnitude < magnitude) {
+        return neighbour;
+      }
     }
   }
 }
